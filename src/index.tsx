@@ -2,27 +2,34 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { createStore } from "redux";
+import { applyMiddleware, createStore } from "redux";
 import rootReducer from "./reducers";
+import { Provider } from "react-redux";
+import { thunk } from "redux-thunk";
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 
-const store = createStore(rootReducer);
+const loggerMiddleware = (store: any) => (next: any) => (action: any) => {
+  console.log("store", store);
+  console.log("action", action);
 
-store.dispatch({
-  type: "ADD_TODO",
-  text: "USE_REDUX",
-});
-console.log("store.getState", store.getState());
+  next(action);
+};
+
+const middleware = applyMiddleware(thunk, loggerMiddleware);
+const store = createStore(rootReducer, {}, middleware); // 빈 객체를 preloadedState로 전달
+
 const render = () =>
   root.render(
     <React.StrictMode>
-      <App
-        value={store.getState()}
-        onIncrement={() => store.dispatch({ type: "INCREMENT" })}
-        onDecrement={() => store.dispatch({ type: "DECREMENT" })}
-      />
+      <Provider store={store}>
+        <App
+          value={store.getState()}
+          onIncrement={() => store.dispatch({ type: "INCREMENT" })}
+          onDecrement={() => store.dispatch({ type: "DECREMENT" })}
+        />
+      </Provider>
     </React.StrictMode>
   );
 
